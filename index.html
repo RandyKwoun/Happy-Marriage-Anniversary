@@ -220,13 +220,28 @@
 
   // 화면 1 -> 화면 2
   document.getElementById('submit-btn').addEventListener('click', () => {
-    const val = document.getElementById('date-input').value; // "YYYY-MM-DD"
-    if (!val) {
+    const input = document.getElementById('date-input');
+    const val = input.value; // 보통 "YYYY-MM-DD"
+
+    // valueAsDate가 있으면 그걸 우선 사용 (브라우저가 실제로 해석한 날짜, UTC 기준)
+    let digits = '';
+    if (input.valueAsDate) {
+      const d = input.valueAsDate;
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      digits = `${y}${m}${day}`;
+    } else if (val) {
+      digits = val.replace(/\D/g, ''); // 숫자만 남기기 (구분자/공백/특수문자 방지)
+    }
+
+    if (!digits) {
       alert('날짜를 선택해주세요.');
       return;
     }
+
     const msgEl = document.getElementById('transition-message');
-    if (val === '1997-08-19') {
+    if (digits === '19970819') {
       msgEl.textContent = '권선종, 김시진님이시군요!';
     } else {
       msgEl.textContent = '잠깐.... 잘못적은거죠...?ㅎㅎ....';
