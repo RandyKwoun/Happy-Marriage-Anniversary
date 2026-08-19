@@ -183,6 +183,22 @@
     color: #777;
     margin: 0;
   }
+  #mute-toggle {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 </head>
 <body>
@@ -223,6 +239,8 @@
       <div class="photo-row"><div class="photo-row-inner" id="row-bottom-1"></div></div>
       <div class="photo-row"><div class="photo-row-inner" id="row-bottom-2"></div></div>
     </div>
+    <audio id="bgm" src="audio/theme.mp3" loop preload="auto"></audio>
+    <button id="mute-toggle" aria-label="음악 재생/음소거">🔊</button>
   </div>
 
 <script>
@@ -274,16 +292,37 @@
   document.getElementById('answer-yes-1').addEventListener('click', () => {
     show('screen-final');
     buildFinalPhotos();
+    playBgm();
   });
   document.getElementById('answer-yes-2').addEventListener('click', () => {
     show('screen-final');
     buildFinalPhotos();
+    playBgm();
   });
 
-  // images 폴더에 photo1.jpg ~ photo{PHOTO_COUNT}.jpg 형식으로 사진을 넣어주세요.
-  // 사진이 이 숫자보다 적으면 반복해서 채워지고, 아직 없으면 분홍색 타일로 대체됩니다.
-  // (위 2줄 + 아래 2줄, 한 줄당 5장씩 총 20장: photo1~5 / 6~10 / 11~15 / 16~20)
-  const PHOTO_COUNT = 20;
+  // 순서대로 배치할 사진 20장 (위 2줄 + 아래 2줄, 한 줄당 5장)
+  const PHOTOS = [
+    'images/2004110323.jpg',
+    'images/DSC_0301.JPG',
+    'images/DSC_0347.JPG',
+    'images/DSC_0359.JPG',
+    'images/DSC_0393.JPG',
+    'images/DSC_1007.JPG',
+    'images/IMG_3282.JPG',
+    'images/IMG_3290.JPG',
+    'images/IMG_3291.JPG',
+    'images/IMG_3335.JPG',
+    'images/IMG_5651.JPG',
+    'images/IMG_5763.JPG',
+    'images/IMG_7944.JPG',
+    'images/IMG_7971.JPG',
+    'images/IMG_8027.JPG',
+    'images/IMG_8056.JPG',
+    'images/IST_6684.JPG',
+    'images/PXL_20220306_022857142.MP.jpg',
+    'images/PXL_20250819_170410094.jpg',
+    'images/PXL_20250821_220946350.jpg',
+  ];
 
   let finalBuilt = false;
   function buildFinalPhotos() {
@@ -300,8 +339,7 @@
     const container = document.getElementById(containerId);
     const files = [];
     for (let i = 0; i < 5; i++) {
-      const n = ((startIndex + i) % PHOTO_COUNT) + 1;
-      files.push(`images/photo${n}.jpg`);
+      files.push(PHOTOS[(startIndex + i) % PHOTOS.length]);
     }
     // 자연스러운 무한 루프를 위해 5장을 통째로 한 번 더 이어붙임
     files.concat(files).forEach(src => {
@@ -318,6 +356,24 @@
       container.appendChild(tile);
     });
   }
+
+  // 배경음악: 화면 3의 버튼 클릭(사용자 제스처) 시점에 재생 시작, loop 속성으로 무한 반복
+  const bgm = document.getElementById('bgm');
+  const muteBtn = document.getElementById('mute-toggle');
+  function playBgm() {
+    bgm.play().catch(() => {
+      // 자동재생이 막힌 경우 -> 오른쪽 아래 버튼으로 수동 재생 가능
+    });
+  }
+  muteBtn.addEventListener('click', () => {
+    if (bgm.paused) {
+      bgm.play();
+      muteBtn.textContent = '🔊';
+    } else {
+      bgm.pause();
+      muteBtn.textContent = '🔇';
+    }
+  });
 </script>
 </body>
 </html>
