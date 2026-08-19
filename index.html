@@ -114,63 +114,71 @@
     transform: translateY(-2px);
   }
 
-  /* 화면 4: 하트 사진 모자이크 */
+  /* 화면 4: 사진 + 축하 문구 */
   #screen-final {
-    padding: 40px 16px;
+    padding: 32px 16px;
+    gap: 20px;
   }
-  #heart-wrap {
-    position: relative;
-    width: min(92vw, 560px);
+  .photo-block {
+    width: min(94vw, 720px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
-  #heart-grid {
-    display: grid;
-    gap: 3px;
+  .photo-row {
     width: 100%;
-    animation: heartBeat 1.8s ease-in-out infinite;
-  }
-  @keyframes heartBeat {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-  }
-  .heart-cell {
-    aspect-ratio: 1 / 1;
-    border-radius: 6px;
     overflow: hidden;
+  }
+  .photo-row-inner {
+    display: flex;
+    gap: 6px;
+    width: max-content;
+    animation: marquee-left 32s linear infinite;
+  }
+  @keyframes marquee-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .photo-row-inner { animation: none; }
+  }
+  .photo-tile {
+    width: clamp(56px, 18vw, 132px);
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
     background: transparent;
   }
-  .heart-cell.placeholder {
+  .photo-tile.placeholder {
     background: linear-gradient(135deg, #ffb3c1, #ff6b81);
   }
-  .heart-cell img {
+  .photo-tile img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
   }
-  #heart-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  #final-text {
     background: rgba(255, 255, 255, 0.9);
     padding: 18px 22px;
     border-radius: 18px;
-    max-width: 72%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    max-width: 90%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   }
-  #heart-text .line1 {
+  #final-text .line1 {
     font-family: 'Do Hyeon', sans-serif;
     color: #ff4d6d;
     font-size: clamp(1.1rem, 4vw, 1.6rem);
     margin: 0 0 6px;
   }
-  #heart-text .line2 {
+  #final-text .line2 {
     font-family: 'Do Hyeon', sans-serif;
     color: #ff4d6d;
     font-size: clamp(0.95rem, 3.2vw, 1.25rem);
     margin: 0 0 8px;
   }
-  #heart-text .line3 {
+  #final-text .line3 {
     font-size: clamp(0.7rem, 2.4vw, 0.9rem);
     color: #777;
     margin: 0;
@@ -200,15 +208,20 @@
     </div>
   </div>
 
-  <!-- 화면 4: 하트 사진 모자이크 -->
+  <!-- 화면 4: 사진 + 축하 문구 -->
   <div id="screen-final" class="screen">
-    <div id="heart-wrap">
-      <div id="heart-grid"></div>
-      <div id="heart-text">
-        <p class="line1">결혼 31주년!</p>
-        <p class="line2">진심으로 축하합니다!</p>
-        <p class="line3">권씨 37대손 형제자매 올림.</p>
-      </div>
+    <div class="photo-block">
+      <div class="photo-row"><div class="photo-row-inner" id="row-top-1"></div></div>
+      <div class="photo-row"><div class="photo-row-inner" id="row-top-2"></div></div>
+    </div>
+    <div id="final-text">
+      <p class="line1">결혼 31주년!</p>
+      <p class="line2">진심으로 축하합니다!</p>
+      <p class="line3">권씨 37대손 형제자매 올림.</p>
+    </div>
+    <div class="photo-block">
+      <div class="photo-row"><div class="photo-row-inner" id="row-bottom-1"></div></div>
+      <div class="photo-row"><div class="photo-row-inner" id="row-bottom-2"></div></div>
     </div>
   </div>
 
@@ -241,71 +254,68 @@
     }
 
     const msgEl = document.getElementById('transition-message');
-    if (digits === '19950819' || digits === '08191995') {
-      msgEl.textContent = '권선종, 김시진님이시군요!';
-    } else {
-      msgEl.textContent = '잠깐.... 잘못적은거죠...?ㅎㅎ....';
-    }
+    const matched = (digits === '19950819' || digits === '08191995');
+    msgEl.textContent = matched
+      ? '권선종, 김시진님이시군요!'
+      : '잠깐.... 잘못적은거죠...?ㅎㅎ....';
+
     show('screen-transition');
-    setTimeout(() => show('screen-question'), 3000);
+    setTimeout(() => {
+      if (matched) {
+        show('screen-question');
+      } else {
+        input.value = ''; // 다시 입력할 수 있도록 초기화
+        show('screen-date');
+      }
+    }, 3000);
   });
 
   // 화면 3 -> 화면 4
   document.getElementById('answer-yes-1').addEventListener('click', () => {
     show('screen-final');
-    buildHeart();
+    buildFinalPhotos();
   });
   document.getElementById('answer-yes-2').addEventListener('click', () => {
     show('screen-final');
-    buildHeart();
+    buildFinalPhotos();
   });
-
-  // 하트 모양 픽셀 매트릭스 (1 = 사진 타일, 0 = 빈 칸)
-  const heartMatrix = [
-    [0,0,1,1,0,0,0,0,0,1,1,0,0],
-    [0,1,1,1,1,0,0,0,1,1,1,1,0],
-    [1,1,1,1,1,1,0,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [0,1,1,1,1,1,1,1,1,1,1,1,0],
-    [0,0,1,1,1,1,1,1,1,1,1,0,0],
-    [0,0,0,1,1,1,1,1,1,1,0,0,0],
-    [0,0,0,0,1,1,1,1,1,0,0,0,0],
-    [0,0,0,0,0,1,1,1,0,0,0,0,0],
-    [0,0,0,0,0,0,1,0,0,0,0,0,0],
-  ];
 
   // images 폴더에 photo1.jpg ~ photo{PHOTO_COUNT}.jpg 형식으로 사진을 넣어주세요.
   // 사진이 이 숫자보다 적으면 반복해서 채워지고, 아직 없으면 분홍색 타일로 대체됩니다.
+  // (위 2줄 + 아래 2줄, 한 줄당 5장씩 총 20장: photo1~5 / 6~10 / 11~15 / 16~20)
   const PHOTO_COUNT = 20;
 
-  let heartBuilt = false;
-  function buildHeart() {
-    if (heartBuilt) return;
-    heartBuilt = true;
+  let finalBuilt = false;
+  function buildFinalPhotos() {
+    if (finalBuilt) return;
+    finalBuilt = true;
 
-    const grid = document.getElementById('heart-grid');
-    grid.style.gridTemplateColumns = `repeat(${heartMatrix[0].length}, 1fr)`;
+    buildPhotoRow('row-top-1', 0);
+    buildPhotoRow('row-top-2', 5);
+    buildPhotoRow('row-bottom-1', 10);
+    buildPhotoRow('row-bottom-2', 15);
+  }
 
-    let photoIndex = 0;
-    heartMatrix.forEach(row => {
-      row.forEach(cell => {
-        const div = document.createElement('div');
-        div.className = 'heart-cell';
-        if (cell === 1) {
-          const n = (photoIndex % PHOTO_COUNT) + 1;
-          const img = document.createElement('img');
-          img.src = `images/photo${n}.jpg`;
-          img.alt = '추억 사진';
-          img.onerror = function () {
-            this.remove();
-            div.classList.add('placeholder');
-          };
-          div.appendChild(img);
-          photoIndex++;
-        }
-        grid.appendChild(div);
-      });
+  function buildPhotoRow(containerId, startIndex) {
+    const container = document.getElementById(containerId);
+    const files = [];
+    for (let i = 0; i < 5; i++) {
+      const n = ((startIndex + i) % PHOTO_COUNT) + 1;
+      files.push(`images/photo${n}.jpg`);
+    }
+    // 자연스러운 무한 루프를 위해 5장을 통째로 한 번 더 이어붙임
+    files.concat(files).forEach(src => {
+      const tile = document.createElement('div');
+      tile.className = 'photo-tile';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = '추억 사진';
+      img.onerror = function () {
+        this.remove();
+        tile.classList.add('placeholder');
+      };
+      tile.appendChild(img);
+      container.appendChild(tile);
     });
   }
 </script>
